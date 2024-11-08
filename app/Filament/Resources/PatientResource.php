@@ -109,9 +109,11 @@ class PatientResource extends Resource
 
                 Tables\Columns\TextColumn::make('gender')
                     ->label(__(Localization::Patient->value . '.gender.title'))
+                    ->formatStateUsing(fn($state) => Gender::getLabelByValue($state))
                     ->sortable()
                     ->toggleable()
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('age')
                     ->label(__(Localization::Patient->value . '.age'))
                     ->sortable()
@@ -127,7 +129,8 @@ class PatientResource extends Resource
                     ->label(__(Localization::Patient->value . '.created_at'))
                     ->sortable()
                     ->toggleable()
-                    ->dateTime('d/m/Y h:m:s A')
+                    ->timezone('Asia/Baghdad')
+                    ->dateTime('d/m/Y h:i:s A')
                     ->sortable(),
             ])
             ->filters([
@@ -138,8 +141,7 @@ class PatientResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                    /*Tables\Actions\DeleteBulkAction::make(),*/]),
             ]);
     }
 

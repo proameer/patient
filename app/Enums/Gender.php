@@ -9,6 +9,11 @@ enum Gender: string
     case female = "female";
 
 
+    public static function getLabelByValue(string $value): string
+    {
+        return __(Localization::Patient->value . '.gender.' . $value);
+    }
+
 
     public function label(): string
     {
