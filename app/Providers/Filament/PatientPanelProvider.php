@@ -19,6 +19,7 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\FontProviders\SpatieGoogleFontProvider;
+
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 
 class PatientPanelProvider extends PanelProvider
@@ -49,6 +50,7 @@ class PatientPanelProvider extends PanelProvider
                     ->editable()
                     ->timezone('Asia/Baghdad')
             ])
+
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

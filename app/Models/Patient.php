@@ -20,7 +20,7 @@ class Patient extends Model
         'age'
     ];
 
-    // Relationships
+
 
     /**
      * Get the checks for the patient.
