@@ -44,6 +44,7 @@ class AppointmentsCalendarWidget extends FullCalendarWidget
                 ->mountUsing(
                     function (Form $form, array $arguments) {
                         $this->createPatientVisiable = true;
+                        $this->patientFullName = null;
 
                         $form->fill([
                             'start_at' => CarbonHelper::dateTimeFormat($arguments['start'] ?? null),
@@ -200,7 +201,7 @@ class AppointmentsCalendarWidget extends FullCalendarWidget
         ]);
 
         Notification::make()
-            ->title(__('notification.success'))
+            ->title(__(Localization::Patient->value . '.quick_create_success'))
             ->success()
             ->send();
 
