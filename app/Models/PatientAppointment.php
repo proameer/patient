@@ -9,7 +9,7 @@ class PatientAppointment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['patient_id', 'appointment_date'];
+    protected $fillable = ['patient_id', 'start_at', 'end_at'];
 
     // Relationships
 

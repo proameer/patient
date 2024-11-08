@@ -20,6 +20,8 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\FontProviders\SpatieGoogleFontProvider;
 
+use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
+
 class PatientPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -42,6 +44,13 @@ class PatientPanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])
+            ->plugins([
+                FilamentFullCalendarPlugin::make()
+                    ->selectable()
+                    ->editable()
+                    ->timezone('Asia/Baghdad')
+            ])
+
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
