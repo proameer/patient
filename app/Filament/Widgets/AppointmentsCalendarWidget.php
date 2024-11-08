@@ -41,8 +41,8 @@ class AppointmentsCalendarWidget extends FullCalendarWidget
                 ->mountUsing(
                     function (Form $form, array $arguments) {
                         $this->createPatientVisiable = true;
-                        $arguments['start'] = isset($arguments['start']) ? Carbon::parse($arguments['start'])->format('Y-m-d H:i:s') : null;
-                        $arguments['end'] = isset($arguments['end']) ? Carbon::parse($arguments['end'])->format('Y-m-d H:i:s') : null;
+                        $this->patientFullName = null;
+
                         $form->fill([
                             'start_at' => $arguments['start'] ?? null,
                             'end_at' => $arguments['end'] ?? null
@@ -182,7 +182,7 @@ class AppointmentsCalendarWidget extends FullCalendarWidget
         ]);
 
         Notification::make()
-            ->title(__('notification.success'))
+            ->title(__(Localization::Patient->value . '.quick_create_success'))
             ->success()
             ->send();
 

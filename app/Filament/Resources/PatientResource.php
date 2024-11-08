@@ -6,6 +6,7 @@ use App\Enums\Gender;
 use App\Enums\Localization;
 use App\Filament\Resources\PatientResource\Pages;
 use App\Filament\Resources\PatientResource\RelationManagers;
+use App\Filament\Resources\PatientResource\RelationManagers\ChecksRelationManager;
 use App\Models\Patient;
 use Filament\Forms;
 use Filament\Forms\Components\Grid;
@@ -13,7 +14,10 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -90,44 +94,45 @@ class PatientResource extends Resource
 
     public static function table(Table $table): Table
     {
+
         return $table
             ->searchable()
             ->striped()
             ->columns([
 
-                Tables\Columns\TextColumn::make('id')
-                    ->label(__(Localization::Patient->value . '.id'))
-                    ->toggleable()
-                    ->sortable()
-                    ->sortable(),
+                ViewColumn::make('qr_code')
+                    ->label(Localization::Patient->value . '.qr_code')
+                    ->translateLabel()
+                    ->view('filament.pages.patient-qr-code'),
 
                 Tables\Columns\TextColumn::make('full_name')
-                    ->label(__(Localization::Patient->value . '.full_name'))
-                    ->sortable()
+                    ->label(Localization::Patient->value . '.full_name')
+                    ->translateLabel()
                     ->toggleable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('gender')
-                    ->label(__(Localization::Patient->value . '.gender.title'))
+                    ->label(Localization::Patient->value . '.gender.title')
+                    ->translateLabel()
                     ->formatStateUsing(fn($state) => Gender::getLabelByValue($state))
-                    ->sortable()
                     ->toggleable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('age')
-                    ->label(__(Localization::Patient->value . '.age'))
-                    ->sortable()
+                    ->label(Localization::Patient->value . '.age')
+                    ->translateLabel()
                     ->toggleable()
                     ->sortable(),
 
                 ImageColumn::make('photo')
-                    ->label(__(Localization::Patient->value . '.photo'))
+                    ->label(Localization::Patient->value . '.photo')
+                    ->translateLabel()
                     ->toggleable()
                     ->disk('public'),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label(__(Localization::Patient->value . '.created_at'))
-                    ->sortable()
+                    ->label(Localization::Patient->value . '.created_at')
+                    ->translateLabel()
                     ->toggleable()
                     ->timezone('Asia/Baghdad')
                     ->dateTime('d/m/Y h:i:s A')
@@ -137,7 +142,15 @@ class PatientResource extends Resource
                 // Optionally add filters here
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                ActionGroup::make([
+                    Tables\Actions\EditAction::make(),
+                    Action::make('print_qr_code')
+                        ->label(Localization::Patient->value . '.print_qr_code')
+                        ->translateLabel()
+                        ->icon('carbon-printer')
+                        ->url(fn($record) => route('patient.pdf', ['qrCode' => $record->qr_code]))
+                        ->openUrlInNewTab(),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -148,7 +161,7 @@ class PatientResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            ChecksRelationManager::class,
         ];
     }
 
