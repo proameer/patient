@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Enums\Localization;
+use App\Helpers\CarbonHelper;
 use App\Models\Patient;
 use App\Models\PatientAppointment;
 use Carbon\Carbon;
@@ -38,14 +39,16 @@ class AppointmentsCalendarWidget extends FullCalendarWidget
                 ->label(Localization::Patient->value . '.appointments.create')
                 ->translateLabel()
                 ->modalHeading(__(Localization::Patient->value . '.appointments.create'))
+                ->modalWidth('sm')
+                ->createAnother(false)
                 ->mountUsing(
                     function (Form $form, array $arguments) {
                         $this->createPatientVisiable = true;
                         $this->patientFullName = null;
 
                         $form->fill([
-                            'start_at' => $arguments['start'] ?? null,
-                            'end_at' => $arguments['end'] ?? null
+                            'start_at' => CarbonHelper::dateTimeFormat($arguments['start'] ?? null),
+                            'end_at' => CarbonHelper::dateTimeFormat($arguments['end'] ?? null)
                         ]);
                     }
                 )
@@ -55,6 +58,7 @@ class AppointmentsCalendarWidget extends FullCalendarWidget
     protected function viewAction(): Action
     {
         return ViewAction::make()
+            ->modalWidth('sm')
             ->modalHeading(fn($record) => __(Localization::Patient->value . '.appointments.view', ['patient' => $record->patient->full_name]));
     }
 
@@ -63,20 +67,36 @@ class AppointmentsCalendarWidget extends FullCalendarWidget
     {
         return [
             EditAction::make()
+                ->modalHeading(fn($record) => __(Localization::Patient->value . '.appointments.edit', ['patient' => $record->patient->full_name]))
+                ->modalWidth('sm')
                 ->mountUsing(
                     function (PatientAppointment $record, Form $form, array $arguments) {
-                        $arguments['event']['start'] = Carbon::parse($arguments['event']['start'])->format('Y-m-d H:i:s');
-                        $arguments['event']['end'] = Carbon::parse($arguments['event']['end'])->format('Y-m-d H:i:s');
+
                         $form->fill([
                             'name' => $record->name,
-                            'start_at' => $arguments['event']['start'] ?? $record->start_at,
-                            'end_at' => $arguments['event']['end'] ?? $record->end_at
+                            // TODO: need refactor ( find a way to reduce the use of ??)
+                            'start_at' => CarbonHelper::dateTimeFormat($arguments['event']['start'] ?? null) ?? $record->start_at,
+                            'end_at' => CarbonHelper::dateTimeFormat($arguments['event']['end'] ?? null) ?? $record->end_at
                         ]);
                     }
                 ),
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->modalWidth('sm')
+                ->modalDescription(fn($record) => $this->getAppointmentStartAtLocalization($record) . ' - ' . $this->getAppointmentEndAtLocalization($record))
+                ->modalHeading(fn($record) => __(Localization::Patient->value . '.appointments.delete', ['patient' => $record->patient->full_name])),
         ];
     }
+
+    public function getAppointmentStartAtLocalization($record)
+    {
+        return __(Localization::Patient->value . '.appointments.patient_start_at', ['patient' => CarbonHelper::dateTimeFormatArabic($record->start_at)]);
+    }
+
+    public function getAppointmentEndAtLocalization($record)
+    {
+        return __(Localization::Patient->value . '.appointments.patient_end_at', ['patient' => CarbonHelper::dateTimeFormatArabic($record->end_at)]);
+    }
+
     /**
      * FullCalendar will call this function whenever it needs new event data.
      * This is triggered when the user clicks prev/next or switches views on the calendar.
@@ -113,41 +133,40 @@ class AppointmentsCalendarWidget extends FullCalendarWidget
     public function getFormSchema(): array
     {
         return [
-            Select::make('patient_id')
-                ->native(false)
-                ->label(Localization::Patient->value . '.patient')
-                ->translateLabel()
-                ->searchable()
-                ->live()
-                ->preload()
-                ->required()
+            Grid::make(1)->schema([
+                Select::make('patient_id')
+                    ->native(false)
+                    ->label(Localization::Patient->value . '.patient')
+                    ->translateLabel()
+                    ->searchable()
+                    ->live()
+                    ->preload()
+                    ->required()
 
-                ->relationship('patient', 'full_name'),
-            Section::make(__(Localization::Patient->value . '.quick_create'))
-                ->schema([
-                    ViewField::make('create_patient')
-                        ->view('filament.pages.appointments-create-patient', [
-                            'label' => __(Localization::Patient->value . '.full_name'),
-                            'buttonLabel' => __(Localization::Patient->value . '.quick_create'),
-                        ])
-                        ->columnSpanFull()
-                        ->label('Create a new patient'),
-                ])
-                ->collapsed()
-                ->live()
-                ->visible(fn(Get $get) => ! $get('patient_id') && $this->createPatientVisiable),
+                    ->relationship('patient', 'full_name'),
+                Section::make(__(Localization::Patient->value . '.quick_create'))
+                    ->schema([
+                        ViewField::make('create_patient')
+                            ->view('filament.pages.appointments-create-patient', [
+                                'label' => __(Localization::Patient->value . '.full_name'),
+                                'buttonLabel' => __(Localization::Patient->value . '.quick_create'),
+                            ])
+                            ->columnSpanFull()
+                            ->label('Create a new patient'),
+                    ])
+                    ->collapsed()
+                    ->live()
+                    ->visible(fn(Get $get) => ! $get('patient_id') && $this->createPatientVisiable),
 
-            Grid::make(2)
-                ->schema([
-                    DateTimePicker::make('start_at')
-                        ->required()
-                        ->translateLabel()
-                        ->label(Localization::Patient->value . '.appointments.start_at'),
-                    DateTimePicker::make('end_at')
-                        ->required()
-                        ->translateLabel()
-                        ->label(Localization::Patient->value . '.appointments.end_at'),
-                ]),
+                DateTimePicker::make('start_at')
+                    ->required()
+                    ->translateLabel()
+                    ->label(Localization::Patient->value . '.appointments.start_at'),
+                DateTimePicker::make('end_at')
+                    ->required()
+                    ->translateLabel()
+                    ->label(Localization::Patient->value . '.appointments.end_at'),
+            ]),
         ];
     }
 
