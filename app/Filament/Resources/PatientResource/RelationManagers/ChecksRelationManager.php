@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PatientResource\RelationManagers;
 
 use App\Enums\Localization;
+use App\Helpers\CarbonHelper;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -20,6 +21,20 @@ class ChecksRelationManager extends RelationManager
     public static function getTitle(Model $ownerRecord, string $pageClass): string
     {
         return __(Localization::Patient->value . '.checks.title');
+    }
+
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\DateTimePicker::make('check_in')
+                    ->label(__(Localization::Patient->value . '.checks.in'))
+                    ->required(),
+
+                Forms\Components\DateTimePicker::make('check_out')
+                    ->label(__(Localization::Patient->value . '.checks.out'))
+                    ->required(),
+            ]);
     }
 
 
@@ -49,11 +64,20 @@ class ChecksRelationManager extends RelationManager
             ])
             ->headerActions([])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->modalHeading(fn($record) => __(Localization::Patient->value . '.checks.edit', ['patient' => $record->patient->full_name])),
+                Tables\Actions\DeleteAction::make()
+                    ->modalHeading(fn($record) => __(Localization::Patient->value . '.checks.delete', ['patient' => $record->patient->full_name]))
+                    ->modalDescription(fn($record) => __(Localization::Patient->value . '.checks.delete_description', [
+                        'in' => CarbonHelper::dateTimeFormatArabic($record->check_in),
+                        'out' => CarbonHelper::dateTimeFormatArabic($record->check_out),
+                    ])),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->modalHeading(fn($records) => __(Localization::Patient->value . '.checks.delete_all', ['patient' => $records->first()->patient->full_name])),
+
                 ]),
             ]);
     }
