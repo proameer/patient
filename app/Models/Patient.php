@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Helpers\Patient as HelpersPatient;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class Patient extends Model
 {
@@ -32,7 +32,7 @@ class Patient extends Model
         // Generate a UUID for qr_code on creating event
         static::creating(function ($patient) {
             if (empty($patient->qr_code)) {
-                $patient->qr_code = Str::uuid();
+                $patient->qr_code = HelpersPatient::getPatientQrCodeValue();
             }
         });
     }
