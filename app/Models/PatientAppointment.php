@@ -9,7 +9,7 @@ class PatientAppointment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['patient_id', 'start_at', 'end_at'];
+    protected $fillable = ['patient_id', 'start_at', 'end_at', 'doctor_id'];
 
     // Relationships
 
@@ -19,5 +19,10 @@ class PatientAppointment extends Model
     public function patient()
     {
         return $this->belongsTo(Patient::class);
+    }
+
+    public function doctor()
+    {
+        return $this->belongsTo(Doctor::class);
     }
 }

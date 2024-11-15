@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Enums\Localization;
 use App\Helpers\CarbonHelper;
+use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\PatientAppointment;
 use Carbon\Carbon;
@@ -73,7 +74,7 @@ class AppointmentsCalendarWidget extends FullCalendarWidget
                     function (PatientAppointment $record, Form $form, array $arguments) {
 
                         $form->fill([
-                            'name' => $record->name,
+                            'doctor_id' => $record->doctor_id,
                             // TODO: need refactor ( find a way to reduce the use of ??)
                             'start_at' => CarbonHelper::dateTimeFormat($arguments['event']['start'] ?? null) ?? $record->start_at,
                             'end_at' => CarbonHelper::dateTimeFormat($arguments['event']['end'] ?? null) ?? $record->end_at
@@ -113,7 +114,7 @@ class AppointmentsCalendarWidget extends FullCalendarWidget
             ->map(
                 fn(PatientAppointment $event) => EventData::make()
                     ->id($event->id)
-                    ->title($event->patient->full_name)
+                    ->title(self::getEventTitle($event))
                     ->start($event->start_at)
                     ->end($event->end_at)
             )
@@ -142,8 +143,8 @@ class AppointmentsCalendarWidget extends FullCalendarWidget
                     ->live()
                     ->preload()
                     ->required()
-
                     ->relationship('patient', 'full_name'),
+
                 Section::make(__(Localization::Patient->value . '.quick_create'))
                     ->schema([
                         ViewField::make('create_patient')
@@ -158,10 +159,21 @@ class AppointmentsCalendarWidget extends FullCalendarWidget
                     ->live()
                     ->visible(fn(Get $get) => ! $get('patient_id') && $this->createPatientVisiable),
 
+                Select::make('doctor_id')
+                    ->options(self::getDoctors())
+                    ->native(false)
+                    ->label(Localization::Doctor->value . '.doctor')
+                    ->translateLabel()
+                    ->searchable()
+                    ->live()
+                    ->preload()
+                    ->required(),
+
                 DateTimePicker::make('start_at')
                     ->required()
                     ->translateLabel()
                     ->label(Localization::Patient->value . '.appointments.start_at'),
+
                 DateTimePicker::make('end_at')
                     ->required()
                     ->translateLabel()
@@ -206,5 +218,17 @@ class AppointmentsCalendarWidget extends FullCalendarWidget
             ->send();
 
         $this->createPatientVisiable = false;
+    }
+
+    public function getDoctors()
+    {
+        return Doctor::query()
+            ->get()
+            ->mapWithKeys(fn($doctor) => [$doctor->id => $doctor->full_name]);
+    }
+
+    public function getEventTitle($event)
+    {
+        return __(Localization::Patient->value . '.patient') . ' : ' . $event->patient->full_name . ' / ' . __(Localization::Doctor->value . '.doctor') . ' : ' . $event->doctor->full_name;
     }
 }
